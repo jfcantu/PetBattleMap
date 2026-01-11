@@ -425,7 +425,7 @@ class FlowVisualizer {
             const opWord = this.getOperatorWord(operator);
             let desc = '';
             if (parsed.target === 'weather') {
-                desc = `Weather ${opWord} ${right}`;
+                desc = `Weather ${opWord} <span class="entity-aura">${right}</span>`;
             } else if (parsed.target === 'round') {
                 desc = `Round ${opWord} ${right}`;
             }
@@ -812,13 +812,13 @@ class FlowVisualizer {
     getOperatorWord(operator) {
         const words = {
             '=': 'is',
-            '!=': 'is not',
+            '!=': 'is <span class="operator-not">NOT</span>',
             '>': 'is greater than',
             '>=': 'is greater than or equal to',
             '<': 'is less than',
             '<=': 'is less than or equal to',
             '~': 'contains',
-            '!~': 'does not contain'
+            '!~': 'does <span class="operator-not">NOT</span> contain'
         };
 
         return words[operator] || operator;

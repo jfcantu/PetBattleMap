@@ -442,6 +442,12 @@ body.condensed-view .separator-line {
     vertical-align: middle;
 }
 
+.operator-not {
+    color: #ff4545;
+    font-weight: 700;
+    font-style: normal !important;
+}
+
 .indent {
     margin-left: 30px;
 }
