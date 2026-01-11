@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetBattleMap</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PetBattleMap</h1>
+            <p>Visualize the flow of your pet battle scripts</p>
+        </header>
+
+        <div class="main-content">
+            <div class="editor-panel">
+                <h2>Script Input</h2>
+                <textarea id="scriptInput" placeholder="Enter your pet battle script here..."></textarea>
+                <button id="visualizeBtn">Visualize</button>
+                <button id="clearBtn">Clear</button>
+            </div>
+
+            <div class="visualization-panel">
+                <div class="visualization-header">
+                    <h2>Flow Visualization</h2>
+                    <div class="visualization-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="condensedViewBtn">
+                            <span>Condensed</span>
+                        </label>
+                        <button id="expandAllBtn">Expand All</button>
+                        <button id="collapseAllBtn">Collapse All</button>
+                    </div>
+                </div>
+                <div id="flowCanvas"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="parser.js"></script>
+    <script src="visualizer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

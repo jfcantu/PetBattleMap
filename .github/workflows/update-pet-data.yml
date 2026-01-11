@@ -1,0 +1,124 @@
+name: Update Pet Data
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Generate pet data from API
+        env:
+          OAUTH_CLIENT_ID: ${{ secrets.WOW_API_OAUTH_CLIENT_ID }}
+          OAUTH_CLIENT_SECRET: ${{ secrets.WOW_API_OAUTH_CLIENT_SECRET }}
+        run: |
+          cd ${{ github.workspace }}
+          node generate-pet-data.js
+
+      - name: Extract namespaces from raw JSON files
+        id: extract-namespaces
+        run: |
+          # Extract pet namespace
+          PET_NAMESPACE=$(jq -r '._links.self.href' pet-index-raw.json | grep -oP 'namespace=\K[^&]+')
+          echo "pet_namespace=$PET_NAMESPACE" >> $GITHUB_OUTPUT
+          echo "Pet namespace: $PET_NAMESPACE"
+
+          # Extract ability namespace
+          ABILITY_NAMESPACE=$(jq -r '._links.self.href' pet-ability-index-raw.json | grep -oP 'namespace=\K[^&]+')
+          echo "ability_namespace=$ABILITY_NAMESPACE" >> $GITHUB_OUTPUT
+          echo "Ability namespace: $ABILITY_NAMESPACE"
+
+      - name: Generate checksums
+        id: checksums
+        run: |
+          # Generate checksums for the new files
+          PET_CHECKSUM=$(sha256sum dist/pet-list.json | cut -d' ' -f1)
+          ABILITY_CHECKSUM=$(sha256sum dist/pet-abilities.json | cut -d' ' -f1)
+
+          echo "pet_checksum=$PET_CHECKSUM" >> $GITHUB_OUTPUT
+          echo "ability_checksum=$ABILITY_CHECKSUM" >> $GITHUB_OUTPUT
+
+          echo "New pet checksum: $PET_CHECKSUM"
+          echo "New ability checksum: $ABILITY_CHECKSUM"
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          CHANGED=false
+
+          # Read previous checksums and namespaces if they exist
+          if [ -f .pet-data-metadata.json ]; then
+            PREV_PET_CHECKSUM=$(jq -r '.pet_checksum // ""' .pet-data-metadata.json)
+            PREV_ABILITY_CHECKSUM=$(jq -r '.ability_checksum // ""' .pet-data-metadata.json)
+            PREV_PET_NAMESPACE=$(jq -r '.pet_namespace // ""' .pet-data-metadata.json)
+            PREV_ABILITY_NAMESPACE=$(jq -r '.ability_namespace // ""' .pet-data-metadata.json)
+
+            echo "Previous pet checksum: $PREV_PET_CHECKSUM"
+            echo "Previous ability checksum: $PREV_ABILITY_CHECKSUM"
+            echo "Previous pet namespace: $PREV_PET_NAMESPACE"
+            echo "Previous ability namespace: $PREV_ABILITY_NAMESPACE"
+
+            # Check if anything changed
+            if [ "$PREV_PET_CHECKSUM" != "${{ steps.checksums.outputs.pet_checksum }}" ] || \
+               [ "$PREV_ABILITY_CHECKSUM" != "${{ steps.checksums.outputs.ability_checksum }}" ] || \
+               [ "$PREV_PET_NAMESPACE" != "${{ steps.extract-namespaces.outputs.pet_namespace }}" ] || \
+               [ "$PREV_ABILITY_NAMESPACE" != "${{ steps.extract-namespaces.outputs.ability_namespace }}" ]; then
+              CHANGED=true
+            fi
+          else
+            # No previous metadata, so this is the first run
+            CHANGED=true
+          fi
+
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+          echo "Data changed: $CHANGED"
+
+      - name: Update metadata file
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          cat > .pet-data-metadata.json << EOF
+          {
+            "pet_checksum": "${{ steps.checksums.outputs.pet_checksum }}",
+            "ability_checksum": "${{ steps.checksums.outputs.ability_checksum }}",
+            "pet_namespace": "${{ steps.extract-namespaces.outputs.pet_namespace }}",
+            "ability_namespace": "${{ steps.extract-namespaces.outputs.ability_namespace }}",
+            "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+          echo "Updated metadata file:"
+          cat .pet-data-metadata.json
+
+      - name: Commit and push changes
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add dist/pet-list.json dist/pet-abilities.json .pet-data-metadata.json
+          git commit -m "Update pet data - namespace: ${{ steps.extract-namespaces.outputs.pet_namespace }}"
+          git push
+
+      - name: No changes detected
+        if: steps.check-changes.outputs.changed == 'false'
+        run: |
+          echo "No changes detected. Checksums and namespaces match previous version."
+          echo "Skipping deployment."
