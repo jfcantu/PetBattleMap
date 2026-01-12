@@ -466,6 +466,25 @@ body.condensed-view .separator-line {
     opacity: 0.5;
 }
 
+footer {
+    text-align: center;
+    padding: 20px;
+    color: #cccccc;
+    font-size: 14px;
+}
+
+footer a {
+    color: #c9a858;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+footer a:hover {
+    color: #f0d589;
+    text-decoration: underline;
+}
+
 @media (max-width: 1024px) {
     .main-content {
         grid-template-columns: 1fr;
