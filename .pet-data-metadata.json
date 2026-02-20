@@ -1,7 +1,7 @@
 {
-  "pet_checksum": "a0f961ef7f597ab98ad020de44c74e7c49ac5877423e0db4cc692cb8e0298cb8",
+  "pet_checksum": "b6bd3c85ec7fffc72dd0edb7f540dcbb931a348f12a46ce92454645134da6b46",
   "ability_checksum": "ee224c0663d4c878022cba8ef0983b80c79cf42db2e1071e5553ba82659b7ffa",
-  "pet_namespace": "static-12.0.0_65028-us",
-  "ability_namespace": "static-12.0.0_65028-us",
-  "updated_at": "2026-01-31T04:01:34Z"
+  "pet_namespace": "static-12.0.1_65617-us",
+  "ability_namespace": "static-12.0.1_65617-us",
+  "updated_at": "2026-02-20T04:11:10Z"
 }
